@@ -81,3 +81,20 @@ margin-top:10px;
 </div>
 
 <button onclick="startGame()">
+
+
+// BRAWL PASS
+
+const brawlPass = {
+season:1,
+progress:0
+}
+
+function winBattle(){
+
+brawlPass.progress++
+
+document.getElementById("brawlpass").innerText =
+"Tier "+brawlPass.progress
+
+}
