@@ -147,3 +147,112 @@ function getRank(trophies) {
   return rank;
 }
 
+
+const express = require("express");
+const app = express();
+
+app.use(express.json());
+
+let player = {
+  trophies: 0,
+  coins: 0,
+  powerPoints: 0
+};
+
+const ranks = [
+  { rank: 1, trophies: 0 },
+  { rank: 2, trophies: 10 },
+  { rank: 3, trophies: 20 },
+  { rank: 4, trophies: 30 },
+  { rank: 5, trophies: 40 },
+  { rank: 10, trophies: 140 },
+  { rank: 15, trophies: 240 },
+  { rank: 20, trophies: 400 },
+  { rank: 25, trophies: 650 },
+  { rank: 30, trophies: 900 },
+  { rank: 35, trophies: 1150 }
+];
+
+function getRank(trophies) {
+  let rank = 1;
+  ranks.forEach(r => {
+    if (trophies >= r.trophies) {
+      rank = r.rank;
+    }
+  });
+  return rank;
+}
+
+app.get("/battle", (req, res) => {
+
+  let winChance = Math.random();
+
+  if (winChance < 0.6) {
+
+    let gain = Math.floor(Math.random() * 10) + 5;
+    player.trophies += gain;
+
+    res.json({
+      result: "win",
+      trophies: player.trophies,
+      rank: getRank(player.trophies)
+    });
+
+  } else {
+
+    let lose = Math.floor(Math.random() * 8) + 3;
+    player.trophies -= lose;
+
+    if (player.trophies < 0) player.trophies = 0;
+
+    res.json({
+      result: "lose",
+      trophies: player.trophies,
+      rank: getRank(player.trophies)
+    });
+  }
+
+});
+
+app.get("/stardrop", (req, res) => {
+
+  let chance = Math.random() * 100;
+  let reward;
+
+  if (chance < 1) {
+    reward = "Legendary Reward";
+    player.coins += 500;
+  }
+  else if (chance < 10) {
+    reward = "Epic Reward";
+    player.coins += 200;
+  }
+  else if (chance < 40) {
+    reward = "Rare Reward";
+    player.powerPoints += 50;
+  }
+  else {
+    reward = "Common Reward";
+    player.coins += 50;
+  }
+
+  res.json({
+    reward: reward,
+    coins: player.coins,
+    powerPoints: player.powerPoints
+  });
+
+});
+
+app.get("/player", (req, res) => {
+  res.json({
+    trophies: player.trophies,
+    rank: getRank(player.trophies),
+    coins: player.coins,
+    powerPoints: player.powerPoints
+  });
+});
+
+app.listen(3000, () => {
+  console.log("Game server running on port 3000");
+});
