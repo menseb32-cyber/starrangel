@@ -87,3 +87,7 @@ useEffect(() => {
 
   processData(data);
 }, [data || null]);
+
+useEffect(() => {
+  loadData(userId);
+}, [userId]);
