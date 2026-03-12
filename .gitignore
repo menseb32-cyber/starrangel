@@ -1,169 +1,61 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+game.js
 
-useEffect(() => {
-  loadData();
-}, []);
+const player = {
+  x: 100,
+  y: 200,
+  hp: 5600,
+  damage: 1500,
+  trophies: 0,
+  cubes: 0
+};
 
-# IDE and editors
-.idea/
-.vscode/
+const bot = {
+  x: 400,
+  y: 200,
+  hp: 5000
+};
 
-# Dependencies
-node_modules/
-/node_modules
-/.pnp
-.pnp.js
-.yarn/install-state.gz
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+function movePlayer(dx, dy) {
+  player.x += dx;
+  player.y += dy;
+}
 
-# Testing
-/coverage
+function attackBot() {
+  bot.hp -= player.damage;
 
-# Next.js
-/.next/
-/out/
-next-env.d.ts
-*.tsbuildinfo
+  if (bot.hp <= 0) {
+    player.trophies += 8;
+    console.log("Bot besiegt!");
+    respawnBot();
+  }
+}
 
-# Production builds
-/build
-dist/
-dist
-
-# Environment files (comprehensive coverage)
-
-*token.json*
-*credentials.json*
-
-# Logs and debug files
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-dump.rdb
-
-# System files
-.DS_Store
-*.pem
-
-# Python
-__pycache__/
-*pyc*
-venv/
-.venv/
-
-# Development tools
-chainlit.md
-.chainlit
-.ipynb_checkpoints/
-.ac
-
-# Deployment
-.vercel
-
-# Data and databases
-agenthub/agents/youtube/db
-
-# Archive files and large assets
-**/*.zip
-**/*.tar.gz
-**/*.tar
-**/*.tgz
-*.pack
-*.deb
-*.dylib
-
-# Build caches
-.cache/
-
-# Mobile development
-android-sdk/ -e 
-# Environment files
-*.env
-*.env.*
-
-useEffect(() => {
-  initGame();
-}, []);
-
-  processData(data);
-}, [data || null]);
-
-useEffect(() => {
-  loadData(userId);
-}, [userId]);
-
-const oldBrawlStarsRanks = [
-  { rank: 1, trophies: 0 },
-  { rank: 2, trophies: 10 },
-  { rank: 3, trophies: 20 },
-  { rank: 4, trophies: 30 },
-  { rank: 5, trophies: 40 },
-  { rank: 6, trophies: 60 },
-  { rank: 7, trophies: 80 },
-  { rank: 8, trophies: 100 },
-  { rank: 9, trophies: 120 },
-  { rank: 10, trophies: 140 },
-  { rank: 11, trophies: 160 },
-  { rank: 12, trophies: 180 },
-  { rank: 13, trophies: 200 },
-  { rank: 14, trophies: 220 },
-  { rank: 15, trophies: 240 },
-  { rank: 16, trophies: 260 },
-  { rank: 17, trophies: 280 },
-  { rank: 18, trophies: 300 },
-  { rank: 19, trophies: 350 },
-  { rank: 20, trophies: 400 },
-  { rank: 21, trophies: 450 },
-  { rank: 22, trophies: 500 },
-  { rank: 23, trophies: 550 },
-  { rank: 24, trophies: 600 },
-  { rank: 25, trophies: 650 },
-  { rank: 26, trophies: 700 },
-  { rank: 27, trophies: 750 },
-  { rank: 28, trophies: 800 },
-  { rank: 29, trophies: 850 },
-  { rank: 30, trophies: 900 },
-  { rank: 31, trophies: 950 },
-  { rank: 32, trophies: 1000 },
-  { rank: 33, trophies: 1050 },
-  { rank: 34, trophies: 1100 },
-  { rank: 35, trophies: 1150 }
-];
-
-function getRank(trophies) {
-  let rank = 1;
-  
-  oldBrawlStarsRanks.forEach(r => {
-    if (trophies >= r.trophies) {
-      rank = r.rank;
-    }
-  });
-
-  return rank;
+function respawnBot() {
+  bot.hp = 5000;
+  bot.x = Math.random() * 500;
+  bot.y = Math.random() * 300;
 }
 
 
-const express = require("express");
-const app = express();
+const cubes = [];
 
-app.use(express.json());
+function spawnCube() {
+  cubes.push({
+    x: Math.random() * 500,
+    y: Math.random() * 300
+  });
+}
 
-let player = {
-  trophies: 0,
-  coins: 0,
-  powerPoints: 0
-};
+function collectCube(index) {
+  player.cubes++;
+  player.damage += 200;
+  player.hp += 400;
+  cubes.splice(index, 1);
+}
+
 
 const ranks = [
   { rank: 1, trophies: 0 },
-  { rank: 2, trophies: 10 },
-  { rank: 3, trophies: 20 },
-  { rank: 4, trophies: 30 },
   { rank: 5, trophies: 40 },
   { rank: 10, trophies: 140 },
   { rank: 15, trophies: 240 },
@@ -175,438 +67,88 @@ const ranks = [
 
 function getRank(trophies) {
   let rank = 1;
+
   ranks.forEach(r => {
     if (trophies >= r.trophies) {
       rank = r.rank;
     }
   });
+
   return rank;
 }
 
-app.get("/battle", (req, res) => {
 
-  let winChance = Math.random();
-
-  if (winChance < 0.6) {
-
-    let gain = Math.floor(Math.random() * 10) + 5;
-    player.trophies += gain;
-
-    res.json({
-      result: "win",
-      trophies: player.trophies,
-      rank: getRank(player.trophies)
-    });
-
-  } else {
-
-    let lose = Math.floor(Math.random() * 8) + 3;
-    player.trophies -= lose;
-
-    if (player.trophies < 0) player.trophies = 0;
-
-    res.json({
-      result: "lose",
-      trophies: player.trophies,
-      rank: getRank(player.trophies)
-    });
-  }
-
-});
-
-app.get("/stardrop", (req, res) => {
+function openStarDrop() {
 
   let chance = Math.random() * 100;
-  let reward;
 
-  if (chance < 1) {
-    reward = "Legendary Reward";
-    player.coins += 500;
-  }
-  else if (chance < 10) {
-    reward = "Epic Reward";
-    player.coins += 200;
-  }
-  else if (chance < 40) {
-    reward = "Rare Reward";
-    player.powerPoints += 50;
-  }
-  else {
-    reward = "Common Reward";
-    player.coins += 50;
-  }
+  if (chance < 1) return "Legendary";
+  if (chance < 10) return "Epic";
+  if (chance < 40) return "Rare";
 
-  res.json({
-    reward: reward,
-    coins: player.coins,
-    powerPoints: player.powerPoints
-  });
-
-});
-
-app.get("/player", (req, res) => {
-  res.json({
-    trophies: player.trophies,
-    rank: getRank(player.trophies),
-    coins: player.coins,
-    powerPoints: player.powerPoints
-  });
-});
-
-app.listen(3000, () => {
-  console.log("Game server running on port 3000");
-});
+  return "Common";
+}
 
 
 const brawlPass = {
   season: 1,
-  name: "Brawl Pass Season 1",
-
-  purchasable: false, // noch nicht kaufbar
+  purchasable: false,
 
   freeTrack: [
-    { tier: 1, reward: "50 Coins" },
+    { tier: 1, reward: "Coins 50" },
     { tier: 2, reward: "Star Drop" },
-    { tier: 3, reward: "100 Coins" },
-    { tier: 4, reward: "Rare Star Drop" },
-    { tier: 5, reward: "Brawler Unlock" }
+    { tier: 3, reward: "Coins 100" }
   ],
 
   premiumTrack: [
     { tier: 1, reward: "Mega Box" },
-    { tier: 2, reward: "200 Coins" },
-    { tier: 3, reward: "Epic Star Drop" },
-    { tier: 4, reward: "Exclusive Skin" },
-    { tier: 5, reward: "Legendary Star Drop" }
+    { tier: 2, reward: "Epic Star Drop" }
   ]
 };
 
 
-app.get("/brawlpass", (req, res) => {
 
-  res.json({
-    season: brawlPass.season,
-    purchasable: brawlPass.purchasable,
-    free: brawlPass.freeTrack,
-    premium: brawlPass.premiumTrack
-  });
-
-});
-
-
-app.post("/buyBrawlPass", (req, res) => {
-
-  if (!brawlPass.purchasable) {
-
-    return res.json({
-      success: false,
-      message: "Brawl Pass kann noch nicht gekauft werden."
-    });
-
-  }
-
-});
-
-
-const brawlers = [
-
-{
-id: 1,
-name: "Shelly",
-rarity: "Starter",
-hp: 5600,
-attack: {
-name: "Buckshot",
-description: "Schießt mehrere Schrotkugeln in einem Kegel.",
-damage: 1500,
-range: "Medium",
-type: "Spread Shot"
-},
-super: {
-name: "Super Shell",
-description: "Eine große Schrotladung zerstört Hindernisse und stößt Gegner zurück."
-}
-},
-
-{
-id: 2,
-name: "Colt",
-rarity: "Rare",
-hp: 4000,
-attack: {
-name: "Six-Shooter",
-description: "Feuert sechs schnelle Kugeln in einer geraden Linie.",
-damage: 1600,
-range: "Long",
-type: "Linear Shot"
-},
-super: {
-name: "Bullet Storm",
-description: "Feuert eine lange Kugelserie, die Wände zerstören kann."
-}
-},
-
-{
-id: 3,
-name: "Bull",
-rarity: "Rare",
-hp: 8000,
-attack: {
-name: "Double-Barrel",
-description: "Schießt mehrere Schrotkugeln mit seiner Shotgun.",
-damage: 2000,
-range: "Short",
-type: "Shotgun"
-},
-super: {
-name: "Bulldozer",
-description: "Bull stürmt nach vorne und zerstört Hindernisse."
-}
-},
-
-{
-id: 4,
-name: "Jessie",
-rarity: "Super Rare",
-hp: 4200,
-attack: {
-name: "Shock Rifle",
-description: "Elektrische Kugel springt zwischen Gegnern.",
-damage: 1300,
-range: "Long",
-type: "Bounce Shot"
-},
-super: {
-name: "Scrappy",
-description: "Stellt einen Geschützturm auf, der automatisch schießt."
-}
-},
-
-{
-id: 5,
-name: "Brock",
-rarity: "Rare",
-hp: 3600,
-attack: {
-name: "Rocket Fuel",
-description: "Schießt eine Rakete mit Explosionsschaden.",
-damage: 1700,
-range: "Very Long",
-type: "Rocket"
-},
-super: {
-name: "Rocket Rain",
-description: "Viele Raketen schlagen in einem Gebiet ein."
-}
-},
-
-{
-id: 6,
-name: "Hank",
-rarity: "Epic",
-hp: 7600,
-attack: {
-name: "Balloon Blast",
-description: "Lädt eine große Wasserblase auf, die beim Loslassen explodiert.",
-damage: 2000,
-range: "Medium",
-type: "Charge Attack"
-},
-super: {
-name: "Fish Torpedoes",
-description: "Feuert mehrere Torpedos in verschiedene Richtungen."
-}
-}
-
-];
+server.js
 
 
 const express = require("express");
 const app = express();
 
-app.get("/brawlers", (req, res) => {
-  res.json(brawlers);
+let players = [];
+
+app.get("/leaderboard", (req, res) => {
+
+  const sorted = players.sort((a,b)=>b.trophies-a.trophies);
+
+  res.json(sorted);
+
 });
 
 app.listen(3000, () => {
-  console.log("Game server läuft auf Port 3000");
+  console.log("Server läuft");
 });
 
 
-function attack(attacker, defender) {
+const brawlers = [
+  {
+    name: "Shelly",
+    hp: 5600,
+    damage: 1500,
+    attack: "Shotgun"
+  },
+  {
+    name: "Colt",
+    hp: 4000,
+    damage: 1600,
+    attack: "Six Shooter"
+  },
+  {
+    name: "Bull",
+    hp: 8000,
+    damage: 2000,
+    attack: "Shotgun"
+  }
+];
 
-let damage = attacker.attack.damage;
-
-defender.hp -= damage;
-
-if(defender.hp <= 0){
-return "win";
-}
-
-return "fight";
-}
 
 
-
-<!DOCTYPE html>
-<html>
-<head>
-<title>Mini Brawler Game</title>
-
-<style>
-
-body{
-background:#1e1e1e;
-color:white;
-font-family:Arial;
-text-align:center;
-}
-
-#game{
-width:600px;
-height:400px;
-background:#2b2b2b;
-margin:auto;
-position:relative;
-overflow:hidden;
-border-radius:10px;
-}
-
-.player{
-width:30px;
-height:30px;
-background:purple;
-position:absolute;
-border-radius:50%;
-}
-
-.bot{
-width:30px;
-height:30px;
-background:red;
-position:absolute;
-border-radius:50%;
-}
-
-.cube{
-width:20px;
-height:20px;
-background:lime;
-position:absolute;
-}
-
-button{
-padding:10px;
-margin:10px;
-font-size:18px;
-}
-
-</style>
-</head>
-
-<body>
-
-<h1>Mini Brawler</h1>
-
-<div>
-Trophäen: <span id="trophies">0</span>
-</div>
-
-<div>
-Power Cubes: <span id="cubes">0</span>
-</div>
-
-<button onclick="startGame()">Start Battle</button>
-
-<div id="game"></div>
-
-<script>
-
-let player
-let bot
-let cubes=0
-let trophies=0
-
-function startGame(){
-
-const game=document.getElementById("game")
-
-game.innerHTML=""
-
-player=document.createElement("div")
-player.className="player"
-player.style.left="50px"
-player.style.top="200px"
-
-bot=document.createElement("div")
-bot.className="bot"
-bot.style.left="500px"
-bot.style.top="200px"
-
-game.appendChild(player)
-game.appendChild(bot)
-
-spawnCube()
-
-}
-
-function spawnCube(){
-
-const cube=document.createElement("div")
-cube.className="cube"
-
-cube.style.left=Math.random()*560+"px"
-cube.style.top=Math.random()*360+"px"
-
-cube.onclick=function(){
-
-cubes++
-document.getElementById("cubes").innerText=cubes
-
-cube.remove()
-
-}
-
-document.getElementById("game").appendChild(cube)
-
-}
-
-document.addEventListener("keydown",function(e){
-
-let x=parseInt(player.style.left)
-let y=parseInt(player.style.top)
-
-if(e.key=="w") y-=10
-if(e.key=="s") y+=10
-if(e.key=="a") x-=10
-if(e.key=="d") x+=10
-
-player.style.left=x+"px"
-player.style.top=y+"px"
-
-checkFight()
-
-})
-
-function checkFight(){
-
-let px=parseInt(player.style.left)
-let bx=parseInt(bot.style.left)
-
-if(Math.abs(px-bx)<30){
-
-trophies+=10
-document.getElementById("trophies").innerText=trophies
-
-alert("Bot besiegt!")
-
-startGame()
-
-}
-
-}
-
-</script>
-
-</body>
-</html>
