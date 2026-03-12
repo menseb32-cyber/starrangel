@@ -256,3 +256,53 @@ app.get("/player", (req, res) => {
 app.listen(3000, () => {
   console.log("Game server running on port 3000");
 });
+
+
+const brawlPass = {
+  season: 1,
+  name: "Brawl Pass Season 1",
+
+  purchasable: false, // noch nicht kaufbar
+
+  freeTrack: [
+    { tier: 1, reward: "50 Coins" },
+    { tier: 2, reward: "Star Drop" },
+    { tier: 3, reward: "100 Coins" },
+    { tier: 4, reward: "Rare Star Drop" },
+    { tier: 5, reward: "Brawler Unlock" }
+  ],
+
+  premiumTrack: [
+    { tier: 1, reward: "Mega Box" },
+    { tier: 2, reward: "200 Coins" },
+    { tier: 3, reward: "Epic Star Drop" },
+    { tier: 4, reward: "Exclusive Skin" },
+    { tier: 5, reward: "Legendary Star Drop" }
+  ]
+};
+
+
+app.get("/brawlpass", (req, res) => {
+
+  res.json({
+    season: brawlPass.season,
+    purchasable: brawlPass.purchasable,
+    free: brawlPass.freeTrack,
+    premium: brawlPass.premiumTrack
+  });
+
+});
+
+
+app.post("/buyBrawlPass", (req, res) => {
+
+  if (!brawlPass.purchasable) {
+
+    return res.json({
+      success: false,
+      message: "Brawl Pass kann noch nicht gekauft werden."
+    });
+
+  }
+
+});
