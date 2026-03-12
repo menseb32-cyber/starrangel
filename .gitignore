@@ -87,7 +87,8 @@ android-sdk/ -e
 *.env.*
 
 useEffect(() => {
-  if (!data) return;
+  initGame();
+}, []);
 
   processData(data);
 }, [data || null]);
