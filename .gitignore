@@ -445,3 +445,168 @@ return "win";
 
 return "fight";
 }
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>Mini Brawler Game</title>
+
+<style>
+
+body{
+background:#1e1e1e;
+color:white;
+font-family:Arial;
+text-align:center;
+}
+
+#game{
+width:600px;
+height:400px;
+background:#2b2b2b;
+margin:auto;
+position:relative;
+overflow:hidden;
+border-radius:10px;
+}
+
+.player{
+width:30px;
+height:30px;
+background:purple;
+position:absolute;
+border-radius:50%;
+}
+
+.bot{
+width:30px;
+height:30px;
+background:red;
+position:absolute;
+border-radius:50%;
+}
+
+.cube{
+width:20px;
+height:20px;
+background:lime;
+position:absolute;
+}
+
+button{
+padding:10px;
+margin:10px;
+font-size:18px;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>Mini Brawler</h1>
+
+<div>
+Trophäen: <span id="trophies">0</span>
+</div>
+
+<div>
+Power Cubes: <span id="cubes">0</span>
+</div>
+
+<button onclick="startGame()">Start Battle</button>
+
+<div id="game"></div>
+
+<script>
+
+let player
+let bot
+let cubes=0
+let trophies=0
+
+function startGame(){
+
+const game=document.getElementById("game")
+
+game.innerHTML=""
+
+player=document.createElement("div")
+player.className="player"
+player.style.left="50px"
+player.style.top="200px"
+
+bot=document.createElement("div")
+bot.className="bot"
+bot.style.left="500px"
+bot.style.top="200px"
+
+game.appendChild(player)
+game.appendChild(bot)
+
+spawnCube()
+
+}
+
+function spawnCube(){
+
+const cube=document.createElement("div")
+cube.className="cube"
+
+cube.style.left=Math.random()*560+"px"
+cube.style.top=Math.random()*360+"px"
+
+cube.onclick=function(){
+
+cubes++
+document.getElementById("cubes").innerText=cubes
+
+cube.remove()
+
+}
+
+document.getElementById("game").appendChild(cube)
+
+}
+
+document.addEventListener("keydown",function(e){
+
+let x=parseInt(player.style.left)
+let y=parseInt(player.style.top)
+
+if(e.key=="w") y-=10
+if(e.key=="s") y+=10
+if(e.key=="a") x-=10
+if(e.key=="d") x+=10
+
+player.style.left=x+"px"
+player.style.top=y+"px"
+
+checkFight()
+
+})
+
+function checkFight(){
+
+let px=parseInt(player.style.left)
+let bx=parseInt(bot.style.left)
+
+if(Math.abs(px-bx)<30){
+
+trophies+=10
+document.getElementById("trophies").innerText=trophies
+
+alert("Bot besiegt!")
+
+startGame()
+
+}
+
+}
+
+</script>
+
+</body>
+</html>
