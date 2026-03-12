@@ -268,3 +268,61 @@ const brawlers = [
 
 
 
+<!DOCTYPE html>
+<html>
+<head>
+<title>Mini Brawler</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+
+body{
+margin:0;
+background:#1e1e1e;
+color:white;
+font-family:Arial;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+overflow:hidden;
+}
+
+#game{
+width:90vw;
+height:50vw;
+max-width:900px;
+max-height:500px;
+background:#2b2b2b;
+position:relative;
+border-radius:10px;
+}
+
+.player{
+width:30px;
+height:30px;
+background:purple;
+position:absolute;
+border-radius:50%;
+}
+
+.bot{
+width:30px;
+height:30px;
+background:red;
+position:absolute;
+border-radius:50%;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="game"></div>
+
+<script src="game.js"></script>
+
+</body>
+</html>
