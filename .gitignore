@@ -326,3 +326,121 @@ border-radius:50%;
 
 </body>
 </html>
+
+
+
+function generatePlayerID() {
+
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let id = "#";
+
+  for (let i = 0; i < 8; i++) {
+    id += chars[Math.floor(Math.random() * chars.length)];
+  }
+
+  return id;
+}
+
+let playerID = localStorage.getItem("playerID");
+
+if (!playerID) {
+  playerID = generatePlayerID();
+  localStorage.setItem("playerID", playerID);
+}
+
+console.log("Player ID:", playerID);
+
+
+
+<div id="profile">
+Player ID: <span id="pid"></span>
+</div>
+
+
+document.getElementById("pid").innerText = playerID;
+
+
+
+function giveGems(playerID, amount) {
+
+  if(players[playerID]){
+
+    players[playerID].gems += amount;
+
+    console.log(playerID + " hat jetzt " + players[playerID].gems + " Gems");
+
+  } else {
+
+    console.log("Spieler nicht gefunden");
+
+  }
+
+}
+
+
+
+function giveGems(playerID, amount) {
+
+  if(players[playerID]){
+
+    players[playerID].gems += amount;
+
+    console.log(playerID + " hat jetzt " + players[playerID].gems + " Gems");
+
+  } else {
+
+    console.log("Spieler nicht gefunden");
+
+  }
+
+}
+
+
+const developerID = "#DEV1";
+
+function giveGems(adminID, playerID, amount){
+
+  if(adminID !== developerID){
+    console.log("Kein Zugriff");
+    return;
+  }
+
+  players[playerID].gems += amount;
+
+}
+
+
+
+const skins = [
+  {
+    id: "default_gale",
+    name: "Gale",
+    color: "blue"
+  },
+  {
+    id: "merchant_gale",
+    name: "Händler Gale",
+    color: "orange"
+  }
+];
+
+
+function selectSkin(id){
+
+  const skin = skins.find(s => s.id === id);
+
+  if(skin){
+    currentSkin = skin;
+
+    const player = document.querySelector(".player");
+    player.style.background = skin.color;
+  }
+
+}
+
+
+<button onclick="selectSkin('default_gale')">Gale</button>
+
+<button onclick="selectSkin('merchant_gale')">
+Händler Gale
+</button>
