@@ -1,3 +1,119 @@
+index.html
+<!DOCTYPE html>
+<html>
+<head>
+<title>Mini Brawler</title>
+
+<style>
+
+body{
+background:#1e1e1e;
+color:white;
+font-family:Arial;
+text-align:center;
+}
+
+#game{
+width:600px;
+height:400px;
+background:#2b2b2b;
+margin:auto;
+position:relative;
+overflow:hidden;
+}
+
+.player{
+width:30px;
+height:30px;
+background:purple;
+position:absolute;
+border-radius:50%;
+}
+
+.bot{
+width:30px;
+height:30px;
+background:red;
+position:absolute;
+border-radius:50%;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>Mini Brawler</h1>
+
+<button onclick="startGame()">Start</button>
+
+<div id="game"></div>
+
+<script src="game.js"></script>
+
+</body>
+</html>
+
+
+game.js
+
+let player
+let bot
+
+function startGame(){
+
+const game=document.getElementById("game")
+
+game.innerHTML=""
+
+player=document.createElement("div")
+player.className="player"
+player.style.left="50px"
+player.style.top="200px"
+
+bot=document.createElement("div")
+bot.className="bot"
+bot.style.left="500px"
+bot.style.top="200px"
+
+game.appendChild(player)
+game.appendChild(bot)
+
+}
+
+document.addEventListener("keydown",function(e){
+
+let x=parseInt(player.style.left)
+let y=parseInt(player.style.top)
+
+if(e.key=="w") y-=10
+if(e.key=="s") y+=10
+if(e.key=="a") x-=10
+if(e.key=="d") x+=10
+
+player.style.left=x+"px"
+player.style.top=y+"px"
+
+checkFight()
+
+})
+
+function checkFight(){
+
+let px=parseInt(player.style.left)
+let bx=parseInt(bot.style.left)
+
+if(Math.abs(px-bx)<30){
+
+alert("Bot besiegt!")
+
+}
+
+}
+
+
+
+
 game.js
 
 const player = {
