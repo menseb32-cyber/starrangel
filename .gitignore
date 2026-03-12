@@ -81,3 +81,9 @@ android-sdk/ -e
 # Environment files
 *.env
 *.env.*
+
+useEffect(() => {
+  if (!data) return;
+
+  processData(data);
+}, [data || null]);
