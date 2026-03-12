@@ -306,3 +306,142 @@ app.post("/buyBrawlPass", (req, res) => {
   }
 
 });
+
+
+const brawlers = [
+
+{
+id: 1,
+name: "Shelly",
+rarity: "Starter",
+hp: 5600,
+attack: {
+name: "Buckshot",
+description: "Schießt mehrere Schrotkugeln in einem Kegel.",
+damage: 1500,
+range: "Medium",
+type: "Spread Shot"
+},
+super: {
+name: "Super Shell",
+description: "Eine große Schrotladung zerstört Hindernisse und stößt Gegner zurück."
+}
+},
+
+{
+id: 2,
+name: "Colt",
+rarity: "Rare",
+hp: 4000,
+attack: {
+name: "Six-Shooter",
+description: "Feuert sechs schnelle Kugeln in einer geraden Linie.",
+damage: 1600,
+range: "Long",
+type: "Linear Shot"
+},
+super: {
+name: "Bullet Storm",
+description: "Feuert eine lange Kugelserie, die Wände zerstören kann."
+}
+},
+
+{
+id: 3,
+name: "Bull",
+rarity: "Rare",
+hp: 8000,
+attack: {
+name: "Double-Barrel",
+description: "Schießt mehrere Schrotkugeln mit seiner Shotgun.",
+damage: 2000,
+range: "Short",
+type: "Shotgun"
+},
+super: {
+name: "Bulldozer",
+description: "Bull stürmt nach vorne und zerstört Hindernisse."
+}
+},
+
+{
+id: 4,
+name: "Jessie",
+rarity: "Super Rare",
+hp: 4200,
+attack: {
+name: "Shock Rifle",
+description: "Elektrische Kugel springt zwischen Gegnern.",
+damage: 1300,
+range: "Long",
+type: "Bounce Shot"
+},
+super: {
+name: "Scrappy",
+description: "Stellt einen Geschützturm auf, der automatisch schießt."
+}
+},
+
+{
+id: 5,
+name: "Brock",
+rarity: "Rare",
+hp: 3600,
+attack: {
+name: "Rocket Fuel",
+description: "Schießt eine Rakete mit Explosionsschaden.",
+damage: 1700,
+range: "Very Long",
+type: "Rocket"
+},
+super: {
+name: "Rocket Rain",
+description: "Viele Raketen schlagen in einem Gebiet ein."
+}
+},
+
+{
+id: 6,
+name: "Hank",
+rarity: "Epic",
+hp: 7600,
+attack: {
+name: "Balloon Blast",
+description: "Lädt eine große Wasserblase auf, die beim Loslassen explodiert.",
+damage: 2000,
+range: "Medium",
+type: "Charge Attack"
+},
+super: {
+name: "Fish Torpedoes",
+description: "Feuert mehrere Torpedos in verschiedene Richtungen."
+}
+}
+
+];
+
+
+const express = require("express");
+const app = express();
+
+app.get("/brawlers", (req, res) => {
+  res.json(brawlers);
+});
+
+app.listen(3000, () => {
+  console.log("Game server läuft auf Port 3000");
+});
+
+
+function attack(attacker, defender) {
+
+let damage = attacker.attack.damage;
+
+defender.hp -= damage;
+
+if(defender.hp <= 0){
+return "win";
+}
+
+return "fight";
+}
