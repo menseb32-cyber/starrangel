@@ -7,13 +7,14 @@ import {
   PanResponder,
   TouchableOpacity,
   Platform,
+  TextInput,
+  KeyboardAvoidingView,
+  Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { 
-  Circle, Rect, Path, Defs, LinearGradient, RadialGradient, Stop, G, Ellipse, Polygon,
-  ClipPath, Mask, Filter, FeDropShadow, FeGaussianBlur
-} from 'react-native-svg';
-import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import Svg, { Circle, Rect, Path, Defs, LinearGradient, RadialGradient, Stop, G, Ellipse, Polygon } from 'react-native-svg';
+import { Ionicons, MaterialCommunityIcons, FontAwesome5, AntDesign } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -58,12 +59,14 @@ interface GameState {
   bots: Character[];
   bullets: Bullet[];
   poisonRadius: number;
-  gameStatus: 'menu' | 'loading' | 'playing' | 'won' | 'lost';
+  gameStatus: 'welcome' | 'menu' | 'loading' | 'playing' | 'won' | 'lost';
   aliveCount: number;
   matchTime: number;
+  playerName: string;
+  trophies: number;
 }
 
-// 3D Isometric Joystick
+// 3D Joystick Component
 const Joystick3D = ({ type, onMove, onRelease }: { type: 'move' | 'attack'; onMove: (dx: number, dy: number) => void; onRelease: () => void }) => {
   const [knobPos, setKnobPos] = useState({ x: 0, y: 0 });
   const [active, setActive] = useState(false);
@@ -97,13 +100,10 @@ const Joystick3D = ({ type, onMove, onRelease }: { type: 'move' | 'attack'; onMo
 
   return (
     <View style={styles.joystickContainer} {...panResponder.panHandlers}>
-      {/* Outer glow ring */}
       <View style={[styles.joystickGlow, { width: size + 30, height: size + 30, backgroundColor: active ? `${glowColor}30` : 'transparent' }]} />
-      {/* Base with 3D effect */}
       <View style={[styles.joystickBase3D, { width: size, height: size }]}>
         <View style={[styles.joystickBaseInner, { width: size - 8, height: size - 8, backgroundColor: `${baseColor}40`, borderColor: baseColor }]} />
       </View>
-      {/* Knob with 3D gradient */}
       <View
         style={[
           styles.joystickKnob3D,
@@ -112,7 +112,6 @@ const Joystick3D = ({ type, onMove, onRelease }: { type: 'move' | 'attack'; onMo
             height: knobSize,
             backgroundColor: active ? glowColor : baseColor,
             transform: [{ translateX: knobPos.x }, { translateY: knobPos.y }],
-            shadowColor: baseColor,
           },
         ]}
       >
@@ -123,93 +122,109 @@ const Joystick3D = ({ type, onMove, onRelease }: { type: 'move' | 'attack'; onMo
             <View style={styles.crosshairDot} />
           </View>
         )}
-        {/* Knob highlight */}
         <View style={styles.knobHighlight} />
       </View>
     </View>
   );
 };
 
-// 3D Shelly Character with detailed shading
-const Shelly3D = ({ x, y, health, maxHealth, isPlayer, scale = 1 }: any) => {
+// Detailed 3D Shelly Character
+const Shelly3D = ({ x, y, health, maxHealth, isPlayer, scale = 1, name = '' }: any) => {
   const hp = Math.max(0, health / maxHealth);
   const s = scale;
   
   return (
     <G>
-      {/* Ground shadow */}
-      <Ellipse cx={x} cy={y + 22 * s} rx={18 * s} ry={8 * s} fill="rgba(0,0,0,0.4)" />
+      {/* Ground shadow - realistic ellipse */}
+      <Ellipse cx={x} cy={y + 24 * s} rx={20 * s} ry={8 * s} fill="rgba(0,0,0,0.35)" />
       
-      {/* Legs */}
-      <Rect x={x - 12 * s} y={y + 8 * s} width={10 * s} height={16 * s} rx={4} fill="#1a237e" />
-      <Rect x={x + 2 * s} y={y + 8 * s} width={10 * s} height={16 * s} rx={4} fill="#283593" />
-      {/* Shoes */}
-      <Ellipse cx={x - 7 * s} cy={y + 22 * s} rx={6 * s} ry={4 * s} fill="#5d4037" />
-      <Ellipse cx={x + 7 * s} cy={y + 22 * s} rx={6 * s} ry={4 * s} fill="#6d4c41" />
+      {/* Feet/Shoes - 3D */}
+      <Ellipse cx={x - 8 * s} cy={y + 22 * s} rx={7 * s} ry={4 * s} fill="#4e342e" />
+      <Ellipse cx={x - 8 * s} cy={y + 21 * s} rx={6 * s} ry={3 * s} fill="#6d4c41" />
+      <Ellipse cx={x + 8 * s} cy={y + 22 * s} rx={7 * s} ry={4 * s} fill="#4e342e" />
+      <Ellipse cx={x + 8 * s} cy={y + 21 * s} rx={6 * s} ry={3 * s} fill="#6d4c41" />
       
-      {/* Body/Shirt - 3D cylinder effect */}
-      <Ellipse cx={x} cy={y + 10 * s} rx={16 * s} ry={8 * s} fill="#6a1b9a" />
-      <Rect x={x - 16 * s} y={y - 8 * s} width={32 * s} height={18 * s} fill="#7b1fa2" />
-      <Ellipse cx={x} cy={y - 8 * s} rx={16 * s} ry={6 * s} fill="#8e24aa" />
-      {/* Shirt shading */}
-      <Path d={`M ${x - 12 * s} ${y - 5 * s} Q ${x} ${y + 2 * s} ${x + 12 * s} ${y - 5 * s}`} fill="#9c27b0" opacity={0.5} />
+      {/* Legs - Dark blue jeans */}
+      <Rect x={x - 14 * s} y={y + 6 * s} width={11 * s} height={18 * s} rx={4} fill="#1a237e" />
+      <Rect x={x - 13 * s} y={y + 7 * s} width={4 * s} height={16 * s} rx={2} fill="#283593" />
+      <Rect x={x + 3 * s} y={y + 6 * s} width={11 * s} height={18 * s} rx={4} fill="#1a237e" />
+      <Rect x={x + 4 * s} y={y + 7 * s} width={4 * s} height={16 * s} rx={2} fill="#283593" />
       
-      {/* Arms */}
-      <Circle cx={x - 20 * s} cy={y - 2 * s} r={8 * s} fill="#ffcc80" />
-      <Circle cx={x - 20 * s} cy={y - 2 * s} r={6 * s} fill="#ffe0b2" />
-      <Circle cx={x + 20 * s} cy={y - 2 * s} r={8 * s} fill="#ffcc80" />
-      <Circle cx={x + 20 * s} cy={y - 2 * s} r={6 * s} fill="#ffe0b2" />
+      {/* Body/Torso - Purple shirt with 3D shading */}
+      <Ellipse cx={x} cy={y + 8 * s} rx={18 * s} ry={10 * s} fill="#6a1b9a" />
+      <Rect x={x - 18 * s} y={y - 12 * s} width={36 * s} height={22 * s} fill="#7b1fa2" />
+      <Ellipse cx={x} cy={y - 12 * s} rx={18 * s} ry={8 * s} fill="#8e24aa" />
+      {/* Shirt highlights */}
+      <Path d={`M ${x - 14 * s} ${y - 8 * s} Q ${x} ${y - 2 * s} ${x + 14 * s} ${y - 8 * s}`} fill="#9c27b0" opacity={0.6} />
+      {/* Yellow bandana/scarf on body */}
+      <Path d={`M ${x - 12 * s} ${y - 10 * s} L ${x + 12 * s} ${y - 10 * s} L ${x + 8 * s} ${y - 5 * s} L ${x - 8 * s} ${y - 5 * s} Z`} fill="#ffc107" />
       
-      {/* Shotgun */}
-      <Rect x={x + 18 * s} y={y - 8 * s} width={28 * s} height={6 * s} rx={2} fill="#5d4037" />
-      <Rect x={x + 18 * s} y={y - 7 * s} width={28 * s} height={2 * s} fill="#8d6e63" />
-      <Circle cx={x + 44 * s} cy={y - 5 * s} r={4 * s} fill="#3e2723" />
+      {/* Arms - Skin colored with 3D effect */}
+      <Circle cx={x - 22 * s} cy={y - 4 * s} r={9 * s} fill="#e8b88a" />
+      <Circle cx={x - 22 * s} cy={y - 5 * s} r={7 * s} fill="#f5d0a9" />
+      <Circle cx={x + 22 * s} cy={y - 4 * s} r={9 * s} fill="#e8b88a" />
+      <Circle cx={x + 22 * s} cy={y - 5 * s} r={7 * s} fill="#f5d0a9" />
       
-      {/* Head - 3D sphere effect */}
-      <Circle cx={x} cy={y - 22 * s} r={20 * s} fill="#ffcc80" />
-      <Circle cx={x} cy={y - 22 * s} r={18 * s} fill="#ffe0b2" />
-      <Ellipse cx={x - 5 * s} cy={y - 28 * s} rx={8 * s} ry={6 * s} fill="#fff3e0" opacity={0.4} />
+      {/* Shotgun - Detailed */}
+      <Rect x={x + 20 * s} y={y - 12 * s} width={32 * s} height={7 * s} rx={2} fill="#5d4037" />
+      <Rect x={x + 20 * s} y={y - 11 * s} width={30 * s} height={3 * s} fill="#8d6e63" />
+      <Rect x={x + 48 * s} y={y - 14 * s} width={8 * s} height={10 * s} rx={2} fill="#3e2723" />
+      <Circle cx={x + 52 * s} cy={y - 9 * s} r={3 * s} fill="#212121" />
       
-      {/* Hair - Pink spiky 3D */}
-      <Circle cx={x - 16 * s} cy={y - 38 * s} r={14 * s} fill="#e91e63" />
-      <Circle cx={x + 16 * s} cy={y - 38 * s} r={14 * s} fill="#e91e63" />
-      <Circle cx={x} cy={y - 44 * s} r={16 * s} fill="#f06292" />
-      <Circle cx={x - 22 * s} cy={y - 28 * s} r={10 * s} fill="#ec407a" />
-      <Circle cx={x + 22 * s} cy={y - 28 * s} r={10 * s} fill="#ec407a" />
+      {/* Head - 3D sphere with realistic shading */}
+      <Circle cx={x} cy={y - 28 * s} r={22 * s} fill="#e8b88a" />
+      <Circle cx={x} cy={y - 28 * s} r={20 * s} fill="#f5d0a9" />
+      <Ellipse cx={x - 6 * s} cy={y - 34 * s} rx={10 * s} ry={8 * s} fill="#fce4c7" opacity={0.5} />
+      
+      {/* Hair - Pink spiky 3D detailed */}
+      <Circle cx={x - 18 * s} cy={y - 46 * s} r={16 * s} fill="#c2185b" />
+      <Circle cx={x + 18 * s} cy={y - 46 * s} r={16 * s} fill="#c2185b" />
+      <Circle cx={x} cy={y - 52 * s} r={18 * s} fill="#d81b60" />
+      <Circle cx={x - 24 * s} cy={y - 34 * s} r={12 * s} fill="#e91e63" />
+      <Circle cx={x + 24 * s} cy={y - 34 * s} r={12 * s} fill="#e91e63" />
+      <Circle cx={x - 10 * s} cy={y - 56 * s} r={10 * s} fill="#ec407a" />
+      <Circle cx={x + 10 * s} cy={y - 54 * s} r={9 * s} fill="#ec407a" />
       {/* Hair highlights */}
-      <Circle cx={x - 12 * s} cy={y - 46 * s} r={6 * s} fill="#f48fb1" />
-      <Circle cx={x + 8 * s} cy={y - 48 * s} r={5 * s} fill="#f48fb1" />
+      <Circle cx={x - 14 * s} cy={y - 52 * s} r={5 * s} fill="#f48fb1" />
+      <Circle cx={x + 6 * s} cy={y - 56 * s} r={4 * s} fill="#f48fb1" />
+      <Circle cx={x + 20 * s} cy={y - 48 * s} r={3 * s} fill="#f8bbd0" />
       
-      {/* Bandana */}
-      <Rect x={x - 22 * s} y={y - 30 * s} width={44 * s} height={8 * s} rx={4} fill="#ffc107" />
-      <Rect x={x - 20 * s} y={y - 29 * s} width={40 * s} height={3 * s} rx={1} fill="#ffeb3b" />
+      {/* Bandana on head - Yellow */}
+      <Rect x={x - 24 * s} y={y - 36 * s} width={48 * s} height={10 * s} rx={5} fill="#f9a825" />
+      <Rect x={x - 22 * s} y={y - 35 * s} width={44 * s} height={4 * s} rx={2} fill="#ffc107" />
+      <Rect x={x - 20 * s} y={y - 33 * s} width={40 * s} height={2 * s} rx={1} fill="#ffeb3b" />
       
-      {/* Eyes - 3D */}
-      <Ellipse cx={x - 8 * s} cy={y - 22 * s} rx={6 * s} ry={8 * s} fill="white" />
-      <Ellipse cx={x + 8 * s} cy={y - 22 * s} rx={6 * s} ry={8 * s} fill="white" />
-      <Circle cx={x - 8 * s} cy={y - 20 * s} r={4 * s} fill="#333" />
-      <Circle cx={x + 8 * s} cy={y - 20 * s} r={4 * s} fill="#333" />
-      <Circle cx={x - 6 * s} cy={y - 22 * s} r={2 * s} fill="white" />
-      <Circle cx={x + 10 * s} cy={y - 22 * s} r={2 * s} fill="white" />
+      {/* Eyes - Detailed with shine */}
+      <Ellipse cx={x - 9 * s} cy={y - 26 * s} rx={7 * s} ry={9 * s} fill="white" />
+      <Ellipse cx={x + 9 * s} cy={y - 26 * s} rx={7 * s} ry={9 * s} fill="white" />
+      <Circle cx={x - 9 * s} cy={y - 24 * s} r={5 * s} fill="#333" />
+      <Circle cx={x + 9 * s} cy={y - 24 * s} r={5 * s} fill="#333" />
+      <Circle cx={x - 7 * s} cy={y - 26 * s} r={2.5 * s} fill="white" />
+      <Circle cx={x + 11 * s} cy={y - 26 * s} r={2.5 * s} fill="white" />
+      <Circle cx={x - 10 * s} cy={y - 22 * s} r={1.5 * s} fill="white" opacity={0.5} />
+      <Circle cx={x + 8 * s} cy={y - 22 * s} r={1.5 * s} fill="white" opacity={0.5} />
       
-      {/* Eyebrows */}
-      <Path d={`M ${x - 14 * s} ${y - 32 * s} Q ${x - 8 * s} ${y - 36 * s} ${x - 2 * s} ${y - 32 * s}`} stroke="#8d6e63" strokeWidth={2.5 * s} fill="none" />
-      <Path d={`M ${x + 2 * s} ${y - 32 * s} Q ${x + 8 * s} ${y - 36 * s} ${x + 14 * s} ${y - 32 * s}`} stroke="#8d6e63" strokeWidth={2.5 * s} fill="none" />
+      {/* Eyebrows - Thick and expressive */}
+      <Path d={`M ${x - 16 * s} ${y - 38 * s} Q ${x - 9 * s} ${y - 42 * s} ${x - 2 * s} ${y - 38 * s}`} stroke="#8d6e63" strokeWidth={3 * s} fill="none" />
+      <Path d={`M ${x + 2 * s} ${y - 38 * s} Q ${x + 9 * s} ${y - 42 * s} ${x + 16 * s} ${y - 38 * s}`} stroke="#8d6e63" strokeWidth={3 * s} fill="none" />
       
-      {/* Mouth */}
-      <Path d={`M ${x - 6 * s} ${y - 12 * s} Q ${x} ${y - 6 * s} ${x + 6 * s} ${y - 12 * s}`} stroke="#5d4037" strokeWidth={2 * s} fill="none" />
+      {/* Nose - Small */}
+      <Ellipse cx={x} cy={y - 20 * s} rx={2 * s} ry={1.5 * s} fill="#e0a07c" />
       
-      {/* Health bar - 3D style */}
-      <Rect x={x - 28 * s} y={y - 62 * s} width={56 * s} height={12 * s} rx={6} fill="#263238" />
-      <Rect x={x - 26 * s} y={y - 60 * s} width={52 * s} height={8 * s} rx={4} fill="#37474f" />
-      <Rect x={x - 26 * s} y={y - 60 * s} width={52 * hp * s} height={8 * s} rx={4} fill={hp > 0.5 ? '#4caf50' : hp > 0.25 ? '#ff9800' : '#f44336'} />
-      <Rect x={x - 26 * s} y={y - 60 * s} width={52 * hp * s} height={3 * s} rx={2} fill={hp > 0.5 ? '#81c784' : hp > 0.25 ? '#ffb74d' : '#e57373'} />
+      {/* Mouth - Confident smile */}
+      <Path d={`M ${x - 8 * s} ${y - 14 * s} Q ${x} ${y - 8 * s} ${x + 8 * s} ${y - 14 * s}`} stroke="#5d4037" strokeWidth={2.5 * s} fill="none" />
+      
+      {/* Health bar - 3D metallic style */}
+      <Rect x={x - 30 * s} y={y - 72 * s} width={60 * s} height={14 * s} rx={7} fill="#1a1a1a" />
+      <Rect x={x - 29 * s} y={y - 71 * s} width={58 * s} height={12 * s} rx={6} fill="#37474f" />
+      <Rect x={x - 28 * s} y={y - 70 * s} width={56 * hp * s} height={10 * s} rx={5} fill={hp > 0.5 ? '#4caf50' : hp > 0.25 ? '#ff9800' : '#f44336'} />
+      <Rect x={x - 28 * s} y={y - 70 * s} width={56 * hp * s} height={4 * s} rx={2} fill={hp > 0.5 ? '#81c784' : hp > 0.25 ? '#ffb74d' : '#e57373'} />
       
       {/* Player name tag */}
-      {isPlayer && (
+      {isPlayer && name && (
         <G>
-          <Rect x={x - 30 * s} y={y - 78 * s} width={60 * s} height={14 * s} rx={7} fill="#4caf50" />
-          <Rect x={x - 28 * s} y={y - 76 * s} width={56 * s} height={10 * s} rx={5} fill="#388e3c" />
+          <Rect x={x - 35 * s} y={y - 90 * s} width={70 * s} height={16 * s} rx={8} fill="#4caf50" />
+          <Rect x={x - 33 * s} y={y - 88 * s} width={66 * s} height={12 * s} rx={6} fill="#388e3c" />
         </G>
       )}
     </G>
@@ -217,37 +232,27 @@ const Shelly3D = ({ x, y, health, maxHealth, isPlayer, scale = 1 }: any) => {
 };
 
 // 3D Bot Character
-const Bot3D = ({ x, y, health, maxHealth, color, name }: any) => {
+const Bot3D = ({ x, y, health, maxHealth, color }: any) => {
   const hp = Math.max(0, health / maxHealth);
-  const darkColor = color;
-  const lightColor = `${color}cc`;
   
   return (
     <G>
-      {/* Shadow */}
-      <Ellipse cx={x} cy={y + 18} rx={14} ry={6} fill="rgba(0,0,0,0.4)" />
-      
-      {/* Body */}
-      <Circle cx={x} cy={y} r={16} fill={darkColor} />
-      <Circle cx={x - 3} cy={y - 3} r={14} fill={lightColor} />
-      
-      {/* Face */}
-      <Circle cx={x} cy={y - 2} r={12} fill="#ffe0b2" />
-      <Ellipse cx={x - 3} cy={y - 6} rx={6} ry={4} fill="#fff3e0" opacity={0.4} />
-      
-      {/* Evil eyes */}
-      <Circle cx={x - 5} cy={y - 4} r={4} fill="white" />
-      <Circle cx={x + 5} cy={y - 4} r={4} fill="white" />
-      <Circle cx={x - 5} cy={y - 3} r={2} fill="#d32f2f" />
-      <Circle cx={x + 5} cy={y - 3} r={2} fill="#d32f2f" />
-      
-      {/* Angry eyebrows */}
-      <Path d={`M ${x - 9} ${y - 10} L ${x - 2} ${y - 7}`} stroke="#5d4037" strokeWidth={2.5} />
-      <Path d={`M ${x + 9} ${y - 10} L ${x + 2} ${y - 7}`} stroke="#5d4037" strokeWidth={2.5} />
-      
-      {/* Health bar */}
-      <Rect x={x - 22} y={y - 32} width={44} height={8} rx={4} fill="#263238" />
-      <Rect x={x - 20} y={y - 30} width={40 * hp} height={4} rx={2} fill="#f44336" />
+      <Ellipse cx={x} cy={y + 20} rx={16} ry={6} fill="rgba(0,0,0,0.4)" />
+      <Circle cx={x} cy={y} r={18} fill={color} />
+      <Circle cx={x - 3} cy={y - 3} r={16} fill={`${color}dd`} />
+      <Circle cx={x} cy={y - 2} r={14} fill="#f5d0a9" />
+      <Ellipse cx={x - 4} cy={y - 8} rx={6} ry={4} fill="#fce4c7" opacity={0.4} />
+      <Circle cx={x - 5} cy={y - 4} r={5} fill="white" />
+      <Circle cx={x + 5} cy={y - 4} r={5} fill="white" />
+      <Circle cx={x - 5} cy={y - 3} r={2.5} fill="#d32f2f" />
+      <Circle cx={x + 5} cy={y - 3} r={2.5} fill="#d32f2f" />
+      <Circle cx={x - 4} cy={y - 5} r={1.5} fill="white" />
+      <Circle cx={x + 6} cy={y - 5} r={1.5} fill="white" />
+      <Path d={`M ${x - 10} ${y - 12} L ${x - 2} ${y - 8}`} stroke="#5d4037" strokeWidth={3} />
+      <Path d={`M ${x + 10} ${y - 12} L ${x + 2} ${y - 8}`} stroke="#5d4037" strokeWidth={3} />
+      <Rect x={x - 24} y={y - 36} width={48} height={10} rx={5} fill="#1a1a1a" />
+      <Rect x={x - 22} y={y - 34} width={44 * hp} height={6} rx={3} fill="#f44336" />
+      <Rect x={x - 22} y={y - 34} width={44 * hp} height={2} rx={1} fill="#e57373" />
     </G>
   );
 };
@@ -260,11 +265,9 @@ const Tile3D = ({ x, y, type, size }: { x: number; y: number; type: string; size
         <G>
           <Rect x={x} y={y} width={size} height={size} fill="#8d6e63" />
           <Rect x={x + 1} y={y + 1} width={size - 2} height={size - 2} fill="#a1887f" />
-          {/* Grass tufts */}
-          <Circle cx={x + size * 0.25} cy={y + size * 0.3} r={4} fill="#66bb6a" />
-          <Circle cx={x + size * 0.7} cy={y + size * 0.6} r={5} fill="#81c784" />
-          <Circle cx={x + size * 0.4} cy={y + size * 0.8} r={3} fill="#4caf50" />
-          {/* Small stones */}
+          <Circle cx={x + size * 0.2} cy={y + size * 0.25} r={4} fill="#66bb6a" />
+          <Circle cx={x + size * 0.7} cy={y + size * 0.55} r={5} fill="#81c784" />
+          <Circle cx={x + size * 0.35} cy={y + size * 0.75} r={3} fill="#4caf50" />
           <Ellipse cx={x + size * 0.8} cy={y + size * 0.2} rx={3} ry={2} fill="#9e9e9e" />
         </G>
       );
@@ -272,28 +275,23 @@ const Tile3D = ({ x, y, type, size }: { x: number; y: number; type: string; size
       return (
         <G>
           <Rect x={x} y={y} width={size} height={size} fill="#2e7d32" />
-          {/* 3D bush layers */}
-          <Circle cx={x + size / 2} cy={y + size / 2 + 4} r={size / 2 - 2} fill="#1b5e20" />
+          <Circle cx={x + size / 2} cy={y + size / 2 + 5} r={size / 2 - 2} fill="#1b5e20" />
           <Circle cx={x + size / 2} cy={y + size / 2} r={size / 2 - 4} fill="#388e3c" />
-          <Circle cx={x + size / 2 - 4} cy={y + size / 2 - 4} r={size / 3} fill="#4caf50" />
-          <Circle cx={x + size / 2 + 6} cy={y + size / 2 - 2} r={size / 4} fill="#66bb6a" />
-          {/* Highlights */}
-          <Circle cx={x + size * 0.3} cy={y + size * 0.3} r={4} fill="#81c784" />
+          <Circle cx={x + size / 2 - 5} cy={y + size / 2 - 5} r={size / 3} fill="#4caf50" />
+          <Circle cx={x + size / 2 + 7} cy={y + size / 2 - 3} r={size / 4} fill="#66bb6a" />
+          <Circle cx={x + size * 0.25} cy={y + size * 0.25} r={4} fill="#81c784" />
         </G>
       );
     case 'wall':
       return (
         <G>
-          {/* 3D wall with depth */}
-          <Rect x={x} y={y + 6} width={size} height={size - 6} fill="#4e342e" />
-          <Rect x={x} y={y} width={size} height={size - 6} fill="#6d4c41" />
+          <Rect x={x} y={y + 8} width={size} height={size - 8} fill="#3e2723" />
+          <Rect x={x} y={y} width={size} height={size - 6} fill="#5d4037" />
           <Rect x={x + 2} y={y + 2} width={size - 4} height={size - 10} fill="#8d6e63" />
-          {/* Brick pattern */}
-          <Rect x={x + 3} y={y + 4} width={size / 2 - 4} height={size / 3 - 2} fill="#795548" rx={2} />
-          <Rect x={x + size / 2 + 1} y={y + 4} width={size / 2 - 4} height={size / 3 - 2} fill="#795548" rx={2} />
-          <Rect x={x + size / 4} y={y + size / 3 + 3} width={size / 2} height={size / 3 - 2} fill="#795548" rx={2} />
-          {/* Highlight */}
-          <Rect x={x + 3} y={y + 3} width={size - 6} height={2} fill="#a1887f" />
+          <Rect x={x + 4} y={y + 4} width={size / 2 - 5} height={size / 3 - 2} fill="#6d4c41" rx={2} />
+          <Rect x={x + size / 2 + 1} y={y + 4} width={size / 2 - 5} height={size / 3 - 2} fill="#6d4c41" rx={2} />
+          <Rect x={x + size / 4} y={y + size / 3 + 4} width={size / 2} height={size / 3 - 2} fill="#6d4c41" rx={2} />
+          <Rect x={x + 3} y={y + 3} width={size - 6} height={3} fill="#a1887f" />
         </G>
       );
     case 'water':
@@ -301,10 +299,8 @@ const Tile3D = ({ x, y, type, size }: { x: number; y: number; type: string; size
         <G>
           <Rect x={x} y={y} width={size} height={size} fill="#1565c0" />
           <Rect x={x + 2} y={y + 2} width={size - 4} height={size - 4} fill="#1976d2" />
-          {/* Water ripples */}
           <Ellipse cx={x + size * 0.3} cy={y + size * 0.5} rx={8} ry={3} fill="#42a5f5" opacity={0.6} />
           <Ellipse cx={x + size * 0.7} cy={y + size * 0.3} rx={6} ry={2} fill="#64b5f6" opacity={0.5} />
-          <Ellipse cx={x + size * 0.5} cy={y + size * 0.8} rx={5} ry={2} fill="#90caf9" opacity={0.4} />
         </G>
       );
     default:
@@ -329,11 +325,14 @@ export default function BrawlStars3D() {
     bots: [],
     bullets: [],
     poisonRadius: Math.min(MAP_WIDTH, MAP_HEIGHT) / 2,
-    gameStatus: 'menu',
+    gameStatus: 'welcome',
     aliveCount: 1,
     matchTime: 120,
+    playerName: '',
+    trophies: 0,
   });
 
+  const [nameInput, setNameInput] = useState('');
   const [loadingCountdown, setLoadingCountdown] = useState(3);
   const moveDir = useRef({ dx: 0, dy: 0 });
   const attackDir = useRef({ dx: 0, dy: 0 });
@@ -341,7 +340,48 @@ export default function BrawlStars3D() {
   const loopRef = useRef<number | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Generate detailed map
+  // Check for saved name on mount
+  useEffect(() => {
+    const checkSavedName = async () => {
+      try {
+        const savedName = await AsyncStorage.getItem('brawlPlayerName');
+        const savedTrophies = await AsyncStorage.getItem('brawlTrophies');
+        if (savedName) {
+          setGameState(prev => ({ 
+            ...prev, 
+            gameStatus: 'menu', 
+            playerName: savedName,
+            trophies: savedTrophies ? parseInt(savedTrophies) : 0
+          }));
+        }
+      } catch (e) {
+        console.log('Error loading saved data');
+      }
+    };
+    checkSavedName();
+  }, []);
+
+  // Save name
+  const saveName = async (name: string) => {
+    try {
+      await AsyncStorage.setItem('brawlPlayerName', name);
+      await AsyncStorage.setItem('brawlTrophies', '0');
+    } catch (e) {
+      console.log('Error saving name');
+    }
+  };
+
+  // Handle name submission
+  const handleNameSubmit = () => {
+    if (nameInput.trim().length >= 3) {
+      const trimmedName = nameInput.trim().substring(0, 15);
+      saveName(trimmedName);
+      setGameState(prev => ({ ...prev, playerName: trimmedName, gameStatus: 'menu' }));
+      Keyboard.dismiss();
+    }
+  };
+
+  // Generate map
   const [mapData] = useState(() => {
     const map: string[][] = [];
     const rows = Math.floor(MAP_HEIGHT / TILE_SIZE);
@@ -396,15 +436,16 @@ export default function BrawlStars3D() {
   }, []);
 
   const startGame = useCallback(() => {
-    setGameState({
-      player: { id: 'player', x: MAP_WIDTH / 2, y: MAP_HEIGHT / 2, health: MAX_HEALTH, maxHealth: MAX_HEALTH, color: '#9c27b0', name: 'Player', lastAttack: 0, powerCubes: 0 },
+    setGameState(p => ({
+      ...p,
+      player: { id: 'player', x: MAP_WIDTH / 2, y: MAP_HEIGHT / 2, health: MAX_HEALTH, maxHealth: MAX_HEALTH, color: '#9c27b0', name: p.playerName, lastAttack: 0, powerCubes: 0 },
       bots: initBots(),
       bullets: [],
       poisonRadius: Math.min(MAP_WIDTH, MAP_HEIGHT) / 2 - 30,
       gameStatus: 'playing',
       aliveCount: 10,
       matchTime: 120,
-    });
+    }));
     timerRef.current = setInterval(() => {
       setGameState(p => {
         if (p.matchTime <= 0 || p.gameStatus !== 'playing') { if (timerRef.current) clearInterval(timerRef.current); return p; }
@@ -453,6 +494,7 @@ export default function BrawlStars3D() {
     return { bot: b, newBullets };
   }, []);
 
+  // Game loop
   useEffect(() => {
     if (gameState.gameStatus !== 'playing') return;
     const loop = () => {
@@ -495,8 +537,13 @@ export default function BrawlStars3D() {
         const alive = 1 + bots.length;
         let status: GameState['gameStatus'] = 'playing';
         if (pl.health <= 0) { status = 'lost'; if (timerRef.current) clearInterval(timerRef.current); }
-        else if (bots.length === 0) { status = 'won'; if (timerRef.current) clearInterval(timerRef.current); }
-        return { ...p, player: pl, bots, bullets, gameStatus: status, aliveCount: alive };
+        else if (bots.length === 0) { 
+          status = 'won'; 
+          if (timerRef.current) clearInterval(timerRef.current);
+          // Add trophies
+          AsyncStorage.setItem('brawlTrophies', String((p.trophies || 0) + 8));
+        }
+        return { ...p, player: pl, bots, bullets, gameStatus: status, aliveCount: alive, trophies: status === 'won' ? (p.trophies || 0) + 8 : p.trophies };
       });
       loopRef.current = requestAnimationFrame(loop);
     };
@@ -504,7 +551,68 @@ export default function BrawlStars3D() {
     return () => { if (loopRef.current) cancelAnimationFrame(loopRef.current); };
   }, [gameState.gameStatus, shoot, botAI]);
 
-  // ========== MENU ==========
+  // ========== WELCOME / NAME INPUT SCREEN ==========
+  if (gameState.gameStatus === 'welcome') {
+    return (
+      <KeyboardAvoidingView style={styles.welcomeContainer} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <View style={styles.welcomeBg}>
+          <View style={styles.welcomeGradient1} />
+          <View style={styles.welcomeGradient2} />
+        </View>
+        
+        {/* Logo */}
+        <View style={styles.logoContainer}>
+          <Text style={styles.logoText}>BRAWL</Text>
+          <Text style={styles.logoText2}>STARS</Text>
+          <Text style={styles.logoSub}>2D EDITION</Text>
+        </View>
+
+        {/* Shelly Preview */}
+        <View style={styles.welcomeShelly}>
+          <Svg width={200} height={180}>
+            <Shelly3D x={100} y={120} health={MAX_HEALTH} maxHealth={MAX_HEALTH} isPlayer={false} scale={0.85} />
+          </Svg>
+        </View>
+
+        {/* Warning Message */}
+        <View style={styles.warningBox}>
+          <Ionicons name="warning" size={24} color="#ff1744" />
+          <Text style={styles.warningText}>BENUTZE NICHT DEIN ECHTEN NAME!</Text>
+        </View>
+
+        {/* Name Input */}
+        <View style={styles.nameInputContainer}>
+          <Text style={styles.nameLabel}>Gib deinen Spielernamen ein:</Text>
+          <TextInput
+            style={styles.nameInput}
+            placeholder="Spielername (3-15 Zeichen)"
+            placeholderTextColor="#888"
+            value={nameInput}
+            onChangeText={setNameInput}
+            maxLength={15}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <Text style={styles.charCount}>{nameInput.length}/15</Text>
+        </View>
+
+        {/* Submit Button */}
+        <TouchableOpacity 
+          style={[styles.submitBtn, nameInput.trim().length < 3 && styles.submitBtnDisabled]}
+          onPress={handleNameSubmit}
+          disabled={nameInput.trim().length < 3}
+        >
+          <Text style={styles.submitBtnText}>SPIELEN</Text>
+          <Ionicons name="arrow-forward" size={24} color="#000" />
+        </TouchableOpacity>
+
+        {/* Info */}
+        <Text style={styles.infoText}>Der Name wird gespeichert und kann nicht geändert werden.</Text>
+      </KeyboardAvoidingView>
+    );
+  }
+
+  // ========== MAIN MENU ==========
   if (gameState.gameStatus === 'menu') {
     return (
       <View style={styles.menuContainer}>
@@ -519,7 +627,7 @@ export default function BrawlStars3D() {
             <View style={styles.avatarCircle}>
               <Svg width={40} height={50}>
                 <Circle cx={20} cy={20} r={15} fill="#9c27b0" />
-                <Circle cx={20} cy={18} r={12} fill="#ffe0b2" />
+                <Circle cx={20} cy={18} r={12} fill="#f5d0a9" />
                 <Circle cx={15} cy={16} r={3} fill="#333" />
                 <Circle cx={25} cy={16} r={3} fill="#333" />
                 <Circle cx={14} cy={8} r={8} fill="#e91e63" />
@@ -527,10 +635,10 @@ export default function BrawlStars3D() {
               </Svg>
             </View>
             <View>
-              <Text style={styles.profileName}>Player</Text>
+              <Text style={styles.profileName}>{gameState.playerName}</Text>
               <View style={styles.trophyRow}>
                 <FontAwesome5 name="trophy" size={12} color="#ffc107" />
-                <Text style={styles.trophyText}>0</Text>
+                <Text style={styles.trophyText}>{gameState.trophies}</Text>
               </View>
             </View>
           </View>
@@ -542,7 +650,6 @@ export default function BrawlStars3D() {
 
         {/* Main Content */}
         <View style={styles.mainArea}>
-          {/* Left Sidebar */}
           <View style={styles.leftSide}>
             <TouchableOpacity style={styles.shopBtn}>
               <MaterialCommunityIcons name="store" size={24} color="#fff" />
@@ -558,7 +665,6 @@ export default function BrawlStars3D() {
             </View>
           </View>
 
-          {/* Center - Shelly 3D */}
           <View style={styles.centerArea}>
             <View style={styles.floatingIcons}>
               <View style={[styles.floatIcon, { left: '20%', top: 10 }]}><Text>😊</Text></View>
@@ -568,10 +674,8 @@ export default function BrawlStars3D() {
             
             <View style={styles.shellyContainer}>
               <Svg width={280} height={220}>
-                {/* Shelly 1 */}
-                <Shelly3D x={80} y={140} health={MAX_HEALTH} maxHealth={MAX_HEALTH} isPlayer={false} scale={0.9} />
-                {/* Shelly 2 */}
-                <Shelly3D x={200} y={140} health={MAX_HEALTH} maxHealth={MAX_HEALTH} isPlayer={false} scale={0.9} />
+                <Shelly3D x={80} y={140} health={MAX_HEALTH} maxHealth={MAX_HEALTH} isPlayer={false} scale={0.85} />
+                <Shelly3D x={200} y={140} health={MAX_HEALTH} maxHealth={MAX_HEALTH} isPlayer={false} scale={0.85} />
               </Svg>
             </View>
 
@@ -584,7 +688,6 @@ export default function BrawlStars3D() {
             </TouchableOpacity>
           </View>
 
-          {/* Right Sidebar */}
           <View style={styles.rightSide}>
             <TouchableOpacity style={styles.rightBtn}><FontAwesome5 name="trophy" size={18} color="#1976d2" /><Text style={styles.rightBtnText}>TOP</Text></TouchableOpacity>
             <TouchableOpacity style={styles.clubBtn}><Text style={styles.clubNum}>1000</Text><Text style={styles.clubText}>CLUB</Text></TouchableOpacity>
@@ -637,6 +740,7 @@ export default function BrawlStars3D() {
           {[...Array(10)].map((_, i) => (
             <View key={i} style={[styles.playerCard, { backgroundColor: ['#4caf50', '#d32f2f', '#1976d2', '#00897b', '#f57c00', '#7b1fa2', '#388e3c', '#424242', '#0097a7', '#c62828'][i] }]}>
               <Text style={styles.cardRank}>{i + 1}</Text>
+              <Text style={styles.cardName}>{i === 0 ? gameState.playerName.substring(0, 8) : ['Bull', 'Colt', 'Nita', 'Jessie', 'Brock', 'Spike', 'Crow', 'Poco', 'Primo'][i - 1]}</Text>
             </View>
           ))}
         </View>
@@ -662,7 +766,6 @@ export default function BrawlStars3D() {
   // ========== GAMEPLAY ==========
   return (
     <View style={styles.gameContainer}>
-      {/* HUD */}
       <View style={styles.hud}>
         <View style={styles.hudTimer}>
           <Ionicons name="skull" size={20} color="#fff" />
@@ -674,37 +777,25 @@ export default function BrawlStars3D() {
         </View>
       </View>
 
-      {/* Game Map */}
       <View style={styles.mapWrap}>
         <Svg width={MAP_WIDTH} height={MAP_HEIGHT}>
-          {/* Tiles */}
           {mapData.map((row, y) => row.map((tile, x) => (
             <Tile3D key={`${x}-${y}`} x={x * TILE_SIZE} y={y * TILE_SIZE} type={tile} size={TILE_SIZE} />
           )))}
-          
-          {/* Poison zone */}
           <Circle cx={MAP_WIDTH / 2} cy={MAP_HEIGHT / 2} r={gameState.poisonRadius} fill="none" stroke="#9c27b0" strokeWidth={5} strokeDasharray="12,6" opacity={0.7} />
           <Circle cx={MAP_WIDTH / 2} cy={MAP_HEIGHT / 2} r={gameState.poisonRadius + 8} fill="none" stroke="#7b1fa2" strokeWidth={2} strokeDasharray="8,4" opacity={0.4} />
-
-          {/* Bullets */}
           {gameState.bullets.map(b => <Bullet3D key={b.id} x={b.x} y={b.y} isPlayer={b.ownerId === 'player'} />)}
-
-          {/* Bots */}
-          {gameState.bots.map(bot => <Bot3D key={bot.id} x={bot.x} y={bot.y} health={bot.health} maxHealth={bot.maxHealth} color={bot.color} name={bot.name} />)}
-
-          {/* Player (Shelly) */}
-          <Shelly3D x={gameState.player.x} y={gameState.player.y} health={gameState.player.health} maxHealth={gameState.player.maxHealth} isPlayer={true} scale={1} />
+          {gameState.bots.map(bot => <Bot3D key={bot.id} x={bot.x} y={bot.y} health={bot.health} maxHealth={bot.maxHealth} color={bot.color} />)}
+          <Shelly3D x={gameState.player.x} y={gameState.player.y} health={gameState.player.health} maxHealth={gameState.player.maxHealth} isPlayer={true} scale={1} name={gameState.playerName} />
         </Svg>
       </View>
 
-      {/* Emotes */}
       <View style={styles.emotePanel}>
         {['😀', '😠', '😢', '👍'].map((e, i) => (
           <TouchableOpacity key={i} style={styles.emoteBtn}><Text style={styles.emoteText}>{e}</Text></TouchableOpacity>
         ))}
       </View>
 
-      {/* Controls */}
       <View style={styles.controls}>
         <Joystick3D type="move" onMove={(dx, dy) => { moveDir.current = { dx, dy }; }} onRelease={() => { moveDir.current = { dx: 0, dy: 0 }; }} />
         <View style={styles.rightCtrl}>
@@ -719,6 +810,27 @@ export default function BrawlStars3D() {
 }
 
 const styles = StyleSheet.create({
+  // Welcome Screen
+  welcomeContainer: { flex: 1, backgroundColor: '#0d47a1', alignItems: 'center', justifyContent: 'center', padding: 20 },
+  welcomeBg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#1565c0' },
+  welcomeGradient1: { position: 'absolute', top: '20%', left: 0, right: 0, height: 150, backgroundColor: 'rgba(100,181,246,0.15)', transform: [{ skewY: '-5deg' }] },
+  welcomeGradient2: { position: 'absolute', top: '50%', left: 0, right: 0, height: 100, backgroundColor: 'rgba(100,181,246,0.1)', transform: [{ skewY: '3deg' }] },
+  logoContainer: { alignItems: 'center', marginBottom: 10 },
+  logoText: { fontSize: 52, fontWeight: 'bold', color: '#ffc107', textShadowColor: '#000', textShadowOffset: { width: 3, height: 3 }, textShadowRadius: 6 },
+  logoText2: { fontSize: 52, fontWeight: 'bold', color: '#ff5722', marginTop: -15, textShadowColor: '#000', textShadowOffset: { width: 3, height: 3 }, textShadowRadius: 6 },
+  logoSub: { fontSize: 16, color: '#fff', marginTop: 5, letterSpacing: 4 },
+  welcomeShelly: { marginVertical: 10 },
+  warningBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,23,68,0.2)', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12, borderWidth: 2, borderColor: '#ff1744', marginBottom: 20 },
+  warningText: { color: '#ff1744', fontSize: 14, fontWeight: 'bold', marginLeft: 10 },
+  nameInputContainer: { width: '100%', maxWidth: 350, marginBottom: 20 },
+  nameLabel: { color: '#fff', fontSize: 16, marginBottom: 10, textAlign: 'center' },
+  nameInput: { backgroundColor: '#fff', borderRadius: 12, paddingHorizontal: 20, paddingVertical: 15, fontSize: 18, color: '#333', textAlign: 'center' },
+  charCount: { color: '#90caf9', fontSize: 12, textAlign: 'right', marginTop: 5 },
+  submitBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffc107', paddingHorizontal: 50, paddingVertical: 18, borderRadius: 30 },
+  submitBtnDisabled: { backgroundColor: '#666', opacity: 0.6 },
+  submitBtnText: { color: '#000', fontSize: 22, fontWeight: 'bold', marginRight: 10 },
+  infoText: { color: '#90caf9', fontSize: 11, marginTop: 20, textAlign: 'center' },
+
   // Menu
   menuContainer: { flex: 1, backgroundColor: '#0d5c6e' },
   menuBg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
@@ -779,7 +891,7 @@ const styles = StyleSheet.create({
   modeIcon: { width: 45, height: 45, borderRadius: 22, backgroundColor: '#f44336', justifyContent: 'center', alignItems: 'center' },
   modeTimer: { color: '#888', fontSize: 11, marginLeft: 10 },
   modeName: { color: '#fff', fontSize: 13, fontWeight: 'bold', marginLeft: 10 },
-  playBtn: { backgroundColor: '#ffc107', paddingHorizontal: 35, paddingVertical: 18, borderRadius: 12, elevation: 8, shadowColor: '#ffc107', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 6 },
+  playBtn: { backgroundColor: '#ffc107', paddingHorizontal: 35, paddingVertical: 18, borderRadius: 12 },
   playText: { color: '#000', fontSize: 24, fontWeight: 'bold' },
 
   // Loading
@@ -787,8 +899,9 @@ const styles = StyleSheet.create({
   loadTitle: { color: '#f44336', fontSize: 36, fontWeight: 'bold' },
   loadSub: { color: '#fff', fontSize: 17, marginTop: 8, marginBottom: 30 },
   playerGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' },
-  playerCard: { width: 55, height: 65, borderRadius: 10, justifyContent: 'flex-end', alignItems: 'center', margin: 5, paddingBottom: 8 },
-  cardRank: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  playerCard: { width: 60, height: 75, borderRadius: 10, justifyContent: 'flex-end', alignItems: 'center', margin: 5, paddingBottom: 5 },
+  cardRank: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+  cardName: { color: '#fff', fontSize: 8, marginTop: 2 },
   countdown: { color: '#ffc107', fontSize: 28, fontWeight: 'bold', marginTop: 35 },
 
   // Game Over
@@ -821,7 +934,7 @@ const styles = StyleSheet.create({
   joystickGlow: { position: 'absolute', borderRadius: 100 },
   joystickBase3D: { borderRadius: 100, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: 'rgba(255,255,255,0.2)' },
   joystickBaseInner: { borderRadius: 100, borderWidth: 3, justifyContent: 'center', alignItems: 'center' },
-  joystickKnob3D: { position: 'absolute', borderRadius: 100, justifyContent: 'center', alignItems: 'center', elevation: 12, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.5, shadowRadius: 8 },
+  joystickKnob3D: { position: 'absolute', borderRadius: 100, justifyContent: 'center', alignItems: 'center', elevation: 12 },
   knobHighlight: { position: 'absolute', top: 5, left: '20%', width: '40%', height: 10, backgroundColor: 'rgba(255,255,255,0.4)', borderRadius: 5 },
   crosshair3D: { width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' },
   crosshairH: { position: 'absolute', width: 24, height: 4, borderRadius: 2 },
