@@ -96,3 +96,54 @@ useEffect(() => {
 useEffect(() => {
   loadData(userId);
 }, [userId]);
+
+const oldBrawlStarsRanks = [
+  { rank: 1, trophies: 0 },
+  { rank: 2, trophies: 10 },
+  { rank: 3, trophies: 20 },
+  { rank: 4, trophies: 30 },
+  { rank: 5, trophies: 40 },
+  { rank: 6, trophies: 60 },
+  { rank: 7, trophies: 80 },
+  { rank: 8, trophies: 100 },
+  { rank: 9, trophies: 120 },
+  { rank: 10, trophies: 140 },
+  { rank: 11, trophies: 160 },
+  { rank: 12, trophies: 180 },
+  { rank: 13, trophies: 200 },
+  { rank: 14, trophies: 220 },
+  { rank: 15, trophies: 240 },
+  { rank: 16, trophies: 260 },
+  { rank: 17, trophies: 280 },
+  { rank: 18, trophies: 300 },
+  { rank: 19, trophies: 350 },
+  { rank: 20, trophies: 400 },
+  { rank: 21, trophies: 450 },
+  { rank: 22, trophies: 500 },
+  { rank: 23, trophies: 550 },
+  { rank: 24, trophies: 600 },
+  { rank: 25, trophies: 650 },
+  { rank: 26, trophies: 700 },
+  { rank: 27, trophies: 750 },
+  { rank: 28, trophies: 800 },
+  { rank: 29, trophies: 850 },
+  { rank: 30, trophies: 900 },
+  { rank: 31, trophies: 950 },
+  { rank: 32, trophies: 1000 },
+  { rank: 33, trophies: 1050 },
+  { rank: 34, trophies: 1100 },
+  { rank: 35, trophies: 1150 }
+];
+
+function getRank(trophies) {
+  let rank = 1;
+  
+  oldBrawlStarsRanks.forEach(r => {
+    if (trophies >= r.trophies) {
+      rank = r.rank;
+    }
+  });
+
+  return rank;
+}
+
