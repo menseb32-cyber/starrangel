@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mini Brawler</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:radial-gradient(circle,#3fd3ff,#003a6f);
+overflow:hidden;
+color:white;
+}
+
+/* TOP BAR */
+
+#topbar{
+position:absolute;
+top:10px;
+left:50%;
+transform:translateX(-50%);
+display:flex;
+gap:15px;
+}
+
+.currency{
+background:#0c1f3a;
+padding:10px 15px;
+border-radius:12px;
+font-weight:bold;
+}
+
+/* PLAYER */
+
+#player{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+text-align:center;
+}
+
+#player img{
+width:200px;
+}
+
+/* MENUS */
+
+#leftmenu{
+position:absolute;
+left:10px;
+top:120px;
+display:flex;
+flex-direction:column;
+gap:15px;
+}
+
+#rightmenu{
+position:absolute;
+right:10px;
+top:120px;
+display:flex;
+flex-direction:column;
+gap:15px;
+}
+
+.menuBtn{
+background:#0c1f3a;
+padding:12px;
+border-radius:10px;
+width:100px;
+text-align:center;
+font-weight:bold;
+cursor:pointer;
+}
+
+/* PLAY BUTTON */
+
+#play{
+position:absolute;
+bottom:40px;
+right:30px;
+background:#ffd800;
+border:none;
+padding:20px 50px;
+font-size:22px;
+font-weight:bold;
+border-radius:10px;
+cursor:pointer;
+}
+
+/* GAME MODE */
+
+#mode{
+position:absolute;
+bottom:40px;
+left:30px;
+background:#0c1f3a;
+padding:20px;
+border-radius:10px;
+font-weight:bold;
+}
+
+/* ADMIN MENU */
+
+#admin{
+position:absolute;
+top:60px;
+right:10px;
+background:#111;
+padding:15px;
+border-radius:10px;
+display:none;
+}
+
+#admin button{
+margin:5px;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- TOP BAR -->
+
+<div id="topbar">
+
+<div class="currency">
+🏆 <span id="trophies">0</span>
+</div>
+
+<div class="currency">
+💎 <span id="gems">0</span>
+</div>
+
+<div class="currency">
+🪙 <span id="coins">0</span>
+</div>
+
+</div>
+
+<!-- MENUS -->
+
+<div id="leftmenu">
+<div class="menuBtn">SHOP</div>
+<div class="menuBtn">QUESTS</div>
+<div class="menuBtn">PASS</div>
+</div>
+
+<div id="rightmenu">
+<div class="menuBtn">CLUB</div>
+<div class="menuBtn">TOP</div>
+<div class="menuBtn">CHAT</div>
+</div>
+
+<!-- PLAYER -->
+
+<div id="player">
+
+<img src="https://static.wikia.nocookie.net/brawlstars/images/3/3f/Shelly.png">
+
+<br>
+<b>SHELLY</b>
+
+<br>
+<small>ID: <span id="playerid"></span></small>
+
+</div>
+
+<!-- MODE -->
+
+<div id="mode">
+SHOWDOWN
+</div>
+
+<!-- PLAY -->
+
+<button id="play">
+PLAY
+</button>
+
+<!-- ADMIN MENU -->
+
+<div id="admin">
+
+<b>ADMIN</b>
+
+<br><br>
+
+<button onclick="addCoins()">+100 Coins</button>
+
+<button onclick="addGems()">+10 Gems</button>
+
+<button onclick="resetData()">Reset</button>
+
+</div>
+
+<script>
+
+/* PLAYER ID */
+
+if(!localStorage.playerid){
+
+localStorage.playerid =
+Math.floor(Math.random()*9999999)
+
+}
+
+document.getElementById("playerid").innerText =
+localStorage.playerid
+
+
+/* LOAD DATA */
+
+let coins =
+localStorage.coins ?
+parseInt(localStorage.coins) : 100
+
+let gems =
+localStorage.gems ?
+parseInt(localStorage.gems) : 25
+
+let trophies =
+localStorage.trophies ?
+parseInt(localStorage.trophies) : 0
+
+updateUI()
+
+
+function updateUI(){
+
+document.getElementById("coins").innerText = coins
+document.getElementById("gems").innerText = gems
+document.getElementById("trophies").innerText = trophies
+
+localStorage.coins = coins
+localStorage.gems = gems
+localStorage.trophies = trophies
+
+}
+
+
+/* ADMIN */
+
+document.addEventListener("keydown",function(e){
+
+if(e.key=="a"){
+
+let admin =
+document.getElementById("admin")
+
+admin.style.display =
+admin.style.display=="none" ? "block" : "none"
+
+}
+
+})
+
+function addCoins(){
+
+coins += 100
+updateUI()
+
+}
+
+function addGems(){
+
+gems += 10
+updateUI()
+
+}
+
+function resetData(){
+
+coins = 0
+gems = 0
+trophies = 0
+
+updateUI()
+
+}
+
+/* PLAY BUTTON */
+
+document.getElementById("play").onclick=function(){
+
+alert("Game starting soon!")
+
+}
+
+</script>
+
+</body>
+</html>
