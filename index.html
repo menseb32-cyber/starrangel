@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mini Brawler</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:radial-gradient(circle,#3fd3ff,#003a6f);
+overflow:hidden;
+color:white;
+}
+
+/* TOPBAR */
+
+#topbar{
+position:absolute;
+top:10px;
+left:50%;
+transform:translateX(-50%);
+display:flex;
+gap:15px;
+}
+
+.currency{
+background:#0c1f3a;
+padding:10px 15px;
+border-radius:12px;
+font-weight:bold;
+}
+
+/* PLAYER */
+
+#player{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+text-align:center;
+}
+
+#player img{
+width:200px;
+}
+
+/* MENUS */
+
+#leftmenu{
+position:absolute;
+left:10px;
+top:120px;
+display:flex;
+flex-direction:column;
+gap:15px;
+}
+
+#rightmenu{
+position:absolute;
+right:10px;
+top:120px;
+display:flex;
+flex-direction:column;
+gap:15px;
+}
+
+.menuBtn{
+background:#0c1f3a;
+padding:12px;
+border-radius:10px;
+width:100px;
+text-align:center;
+font-weight:bold;
+cursor:pointer;
+}
+
+/* PLAY BUTTON */
+
+#play{
+position:absolute;
+bottom:40px;
+right:30px;
+background:#ffd800;
+border:none;
+padding:20px 50px;
+font-size:22px;
+font-weight:bold;
+border-radius:10px;
+cursor:pointer;
+}
+
+#mode{
+position:absolute;
+bottom:40px;
+left:30px;
+background:#0c1f3a;
+padding:20px;
+border-radius:10px;
+font-weight:bold;
+}
+
+/* PAGES */
+
+.page{
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#1d2a5a;
+display:none;
+padding:20px;
+}
+
+/* JOYSTICK */
+
+#controls{
+position:absolute;
+bottom:20px;
+width:100%;
+display:flex;
+justify-content:space-between;
+padding:0 40px;
+pointer-events:none;
+}
+
+.joystick{
+width:120px;
+height:120px;
+background:rgba(0,0,0,0.3);
+border-radius:50%;
+position:relative;
+pointer-events:auto;
+}
+
+.stick{
+width:60px;
+height:60px;
+background:white;
+border-radius:50%;
+position:absolute;
+top:30px;
+left:30px;
+}
+
+/* ADMIN */
+
+#admin{
+position:absolute;
+top:70px;
+right:10px;
+background:#111;
+padding:15px;
+border-radius:10px;
+display:none;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- TOPBAR -->
+
+<div id="topbar">
+
+<div class="currency">
+🏆 <span id="trophies">0</span>
+</div>
+
+<div class="currency">
+💎 <span id="gems">0</span>
+</div>
+
+<div class="currency">
+🪙 <span id="coins">0</span>
+</div>
+
+</div>
+
+<!-- MENUS -->
+
+<div id="leftmenu">
+<div class="menuBtn">SHOP</div>
+<div class="menuBtn" onclick="openPass()">PASS</div>
+</div>
+
+<div id="rightmenu">
+<div class="menuBtn" onclick="openProfile()">PROFILE</div>
+<div class="menuBtn">CLUB</div>
+</div>
+
+<!-- PLAYER -->
+
+<div id="player">
+
+<img id="brawler" src="https://static.wikia.nocookie.net/brawlstars/images/3/3f/Shelly.png">
+
+<br>
+
+<b>SHELLY</b>
+
+<br>
+
+<small>ID: <span id="playerid"></span></small>
+
+</div>
+
+<!-- MODE -->
+
+<div id="mode">
+SHOWDOWN
+</div>
+
+<!-- PLAY -->
+
+<button id="play">
+PLAY
+</button>
+
+<!-- PROFILE PAGE -->
+
+<div id="profilePage" class="page">
+
+<h2>PROFILE</h2>
+
+<img id="profilePic" src="https://static.wikia.nocookie.net/brawlstars/images/3/3f/Shelly.png" width="120">
+
+<p>ID: <span id="profileID"></span></p>
+
+<p>Trophies: <span id="profileTrophies"></span></p>
+
+<h3>Choose Profile Picture</h3>
+
+<img src="https://static.wikia.nocookie.net/brawlstars/images/3/3f/Shelly.png" width="60" onclick="setProfile(this.src)">
+<img src="https://static.wikia.nocookie.net/brawlstars/images/7/7c/Colt.png" width="60" onclick="setProfile(this.src)">
+<img src="https://static.wikia.nocookie.net/brawlstars/images/2/2f/Nita.png" width="60" onclick="setProfile(this.src)">
+
+<br><br>
+
+<button onclick="closeProfile()">BACK</button>
+
+</div>
+
+<!-- PASS PAGE -->
+
+<div id="passPage" class="page">
+
+<h2>STARR PASS</h2>
+
+<p>Season Rewards</p>
+
+<div style="display:flex;gap:10px">
+
+<div style="background:#222;padding:20px;border-radius:10px">Coins</div>
+
+<div style="background:#222;padding:20px;border-radius:10px">Gems</div>
+
+<div style="background:#222;padding:20px;border-radius:10px">Skin</div>
+
+</div>
+
+<br>
+
+<button>BUY PASS</button>
+
+<br><br>
+
+<button onclick="closePass()">BACK</button>
+
+</div>
+
+<!-- JOYSTICKS -->
+
+<div id="controls">
+
+<div id="moveJoystick" class="joystick">
+<div class="stick"></div>
+</div>
+
+<div id="attackJoystick" class="joystick">
+<div class="stick"></div>
+</div>
+
+</div>
+
+<!-- ADMIN -->
+
+<div id="admin">
+
+<b>ADMIN</b>
+
+<br>
+
+<button onclick="addCoins()">+100 Coins</button>
+
+<button onclick="addGems()">+10 Gems</button>
+
+<button onclick="resetData()">Reset</button>
+
+</div>
+
+<script>
+
+/* PLAYER ID */
+
+if(!localStorage.playerid){
+
+localStorage.playerid =
+Math.floor(Math.random()*999999999)
+
+}
+
+document.getElementById("playerid").innerText =
+localStorage.playerid
+
+
+/* DATA */
+
+let coins =
+localStorage.coins ?
+parseInt(localStorage.coins) : 100
+
+let gems =
+localStorage.gems ?
+parseInt(localStorage.gems) : 25
+
+let trophies =
+localStorage.trophies ?
+parseInt(localStorage.trophies) : 0
+
+updateUI()
+
+function updateUI(){
+
+document.getElementById("coins").innerText=coins
+document.getElementById("gems").innerText=gems
+document.getElementById("trophies").innerText=trophies
+
+localStorage.coins=coins
+localStorage.gems=gems
+localStorage.trophies=trophies
+
+}
+
+/* PROFILE */
+
+function openProfile(){
+
+document.getElementById("profilePage").style.display="block"
+
+document.getElementById("profileID").innerText=localStorage.playerid
+
+document.getElementById("profileTrophies").innerText=trophies
+
+}
+
+function closeProfile(){
+
+document.getElementById("profilePage").style.display="none"
+
+}
+
+function setProfile(src){
+
+document.getElementById("profilePic").src=src
+
+localStorage.profilePic=src
+
+}
+
+/* PASS */
+
+function openPass(){
+
+document.getElementById("passPage").style.display="block"
+
+}
+
+function closePass(){
+
+document.getElementById("passPage").style.display="none"
+
+}
+
+/* ADMIN */
+
+document.addEventListener("keydown",function(e){
+
+if(e.key=="a"){
+
+let admin=document.getElementById("admin")
+
+admin.style.display=
+admin.style.display=="none"?"block":"none"
+
+}
+
+})
+
+function addCoins(){
+
+coins+=100
+updateUI()
+
+}
+
+function addGems(){
+
+gems+=10
+updateUI()
+
+}
+
+function resetData(){
+
+coins=0
+gems=0
+trophies=0
+
+updateUI()
+
+}
+
+/* JOYSTICK */
+
+let move = document.getElementById("moveJoystick")
+let stick = move.querySelector(".stick")
+
+let dragging=false
+
+move.addEventListener("touchstart",()=>{
+
+dragging=true
+
+})
+
+move.addEventListener("touchend",()=>{
+
+dragging=false
+
+stick.style.left="30px"
+stick.style.top="30px"
+
+})
+
+move.addEventListener("touchmove",(e)=>{
+
+if(!dragging) return
+
+let rect = move.getBoundingClientRect()
+
+let x = e.touches[0].clientX - rect.left
+let y = e.touches[0].clientY - rect.top
+
+x=Math.max(20,Math.min(100,x))
+y=Math.max(20,Math.min(100,y))
+
+stick.style.left=(x-30)+"px"
+stick.style.top=(y-30)+"px"
+
+})
+
+</script>
+
+</body>
+</html>
