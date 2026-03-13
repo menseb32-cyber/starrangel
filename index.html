@@ -63,10 +63,12 @@ display:flex;
 gap:20px;
 }
 
-.box{
+.currency{
 background:#222;
-padding:10px 15px;
-border-radius:10px;
+padding:10px 20px;
+border-radius:12px;
+font-weight:bold;
+font-size:18px;
 }
 </style>
 </head>
@@ -76,9 +78,8 @@ border-radius:10px;
 <div id="lobby">
 
 <div id="topbar">
-<div class="box">🏆 0</div>
-<div class="box">💎 0</div>
-<div class="box">🪙 0</div>
+<div class="currency">🪙 <span id="coins">100</span></div>
+<div class="currency">💎 <span id="gems">25</span></div>
 </div>
 
 <div id="player">
@@ -91,56 +92,4 @@ PLAYER
 
 </body>
 </html>
-
-
-
-<div id="topbar">
-
-<div class="currency">
-🪙 <span id="coins">100</span>
-</div>
-
-<div class="currency">
-💎 <span id="gems">25</span>
-</div>
-
-</div>
-
-<style>
-
-#topbar{
-position:absolute;
-top:10px;
-left:10px;
-display:flex;
-gap:20px;
-}
-
-.currency{
-background:#222;
-padding:10px 20px;
-border-radius:12px;
-font-weight:bold;
-font-size:18px;
-}
-
-</style>
-
-
-
-#topbar{
-position:absolute;
-top:10px;
-left:10px;
-display:flex;
-gap:20px;
-}
-
-.currency{
-background:#222;
-padding:10px 20px;
-border-radius:12px;
-font-weight:bold;
-font-size:18px;
-}
-
+  
